@@ -18,9 +18,9 @@ new Cli({
         reg.addRegexPattern('users', '@messenger_.*', true);
         callback(reg);
     },
-    bridgeConfig: {
-        schema: 'messenger-config-schema.yaml'
-    },
+    // bridgeConfig: {
+    //     schema: 'messenger-config-schema.yaml'
+    // },
     run: (port, config) => {
 
         bot = new Bot({
