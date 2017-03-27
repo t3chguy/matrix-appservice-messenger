@@ -1,0 +1,4 @@
+homeserver:
+  url: "http://localhost:8008"
+  domain: "localhost"
+  room_id: ""

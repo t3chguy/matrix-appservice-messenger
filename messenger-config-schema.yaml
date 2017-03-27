@@ -1,0 +1,5 @@
+type: object
+requires: ["messenger_webhook_url"]
+properties:
+  messenger_webhook_url:
+    type: string
