@@ -56,6 +56,9 @@ new Cli({
                             text: "Nick changed to "+ split[1] }, err => {
                                 if (err) throw err;
 
+                                let intent = bridge.getIntent("@messenger_" + payload.sender.id + ':' + config.homeserver.domain);
+                                intent.setDisplayName(split[1]);
+
                                 console.log(`Nick Change for ${profile.first_name} ${profile.last_name}: ${text}`)
                             });
                     }
