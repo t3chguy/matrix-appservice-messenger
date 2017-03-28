@@ -9,9 +9,7 @@ const Bot = require('messenger-bot');
 let bridge, bot;
 
 /**
- * @TODO write schema to enforce config file
  * @TODO file uploads
- * @TODO remove echo on fb side
  * @TODO look into better output methods on the facebook platform
  */
 
@@ -61,15 +59,13 @@ new Cli({
                                 console.log(`Nick Change for ${profile.first_name} ${profile.last_name}: ${text}`)
                             });
                     }
-                } else
-                    reply({ text }, err => {
-                        if (err) throw err;
+                } else {
+                    let intent = bridge.getIntent("@messenger_" + payload.sender.id + ':' + config.homeserver.domain);
+                    intent.sendText(config.homeserver.room_id, text);
 
-                        let intent = bridge.getIntent("@messenger_" + payload.sender.id +':'+ config.homeserver.domain);
-                        intent.sendText(config.homeserver.room_id, text);
+                    console.log(`Forwarded ${profile.first_name} ${profile.last_name}: ${text}`)
+                }
 
-                        console.log(`Echoed back to ${profile.first_name} ${profile.last_name}: ${text}`)
-                    });
             });
         });
 
