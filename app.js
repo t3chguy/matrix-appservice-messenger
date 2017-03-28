@@ -23,7 +23,7 @@ new Cli({
         reg.setAppServiceToken(AppServiceRegistration.generateToken());
         reg.setSenderLocalpart('messengerbot');
         reg.addRegexPattern('users', '@messenger_.*', true);
-        reg.addRegexPattern('aliases', '#messenger_.*', true);
+        reg.addRegexPattern('aliases', '#messenger_.*', false);
         callback(reg);
     },
     bridgeConfig: {
