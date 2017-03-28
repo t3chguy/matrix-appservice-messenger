@@ -8,6 +8,11 @@ const Bot = require('messenger-bot');
 
 let bridge, bot;
 
+/**
+ * @TODO write schema to enforce config file
+ * @TODO file uploads
+ */
+
 new Cli({
     registrationPath: 'messenger-registration.yaml',
     generateRegistration: (reg, callback) => {
@@ -16,6 +21,7 @@ new Cli({
         reg.setAppServiceToken(AppServiceRegistration.generateToken());
         reg.setSenderLocalpart('messengerbot');
         reg.addRegexPattern('users', '@messenger_.*', true);
+        reg.addRegexPattern('aliases', '#messenger_.*', true);
         callback(reg);
     },
     // bridgeConfig: {
@@ -81,7 +87,7 @@ new Cli({
                     if (event.type !== 'm.room.message' || !event.content || event.room_id !== config.homeserver.room_id) return;
 
                     bot.sendMessage(1285416551542338, {
-                        text: event.content.body
+                        text: event.sender.split(':', 2)[0] +': '+ event.content.body
                     }, (err, body) => {
                         if (err) throw err;
                     })
