@@ -11,6 +11,8 @@ let bridge, bot;
 /**
  * @TODO write schema to enforce config file
  * @TODO file uploads
+ * @TODO remove echo on fb side
+ * @TODO look into better output methods on the facebook platform
  */
 
 new Cli({
@@ -24,9 +26,9 @@ new Cli({
         reg.addRegexPattern('aliases', '#messenger_.*', true);
         callback(reg);
     },
-    // bridgeConfig: {
-    //     schema: 'messenger-config-schema.yaml'
-    // },
+    bridgeConfig: {
+        schema: 'messenger-config-schema.yaml'
+    },
     run: (port, config) => {
 
         bot = new Bot({
