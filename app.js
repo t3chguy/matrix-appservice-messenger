@@ -5,12 +5,16 @@ const AppServiceRegistration = require('matrix-appservice-bridge').AppServiceReg
 
 const http = require('http');
 const Bot = require('messenger-bot');
+const request = require('request-promise');
 
 let bridge, bot;
 
 /**
- * @TODO file uploads
+ * @TODO make fb->mx gifs work (sticker GIFs break, real GIFs work...)
+ * @TODO test fb->mx file transfers (PDFs etc)
+ * @TODO mx->fb files/image transfers
  * @TODO look into better output methods on the facebook platform
+ * @TODO opt in/out for fb side instead of hardcode to me
  */
 
 new Cli({
@@ -48,7 +52,33 @@ new Cli({
 
                 if (err) throw err;
 
-                if (text.startsWith('!')) {
+                console.dir(payload);
+
+                if (payload.message.attachments && payload.message.attachments.length) {
+
+                    let intent = bridge.getIntent("@messenger_" + payload.sender.id + ':' + config.homeserver.domain);
+                    payload.message.attachments.forEach(attachment => {
+                        if (attachment.type === 'image')
+                            request.get({
+                                uri: attachment.payload.url,
+                                resolveWithFullResponse: true,
+                                encoding: null
+                            }).then(response => {
+                                intent.getClient().uploadContent(new Buffer(response.body, 'binary'), {
+                                    type: response.headers['content-type'],
+                                    rawResponse: false
+                                }).then(response => {
+                                    intent.sendMessage(config.homeserver.room_id, {
+                                        msgtype: 'm.image',
+                                        url: response.content_uri,
+                                        body: 'facebookImage.jpg'
+                                    });
+                                }).catch(e => console.error(e));
+
+                            });
+                    });
+
+                } else if (text.startsWith('!')) {
                     let split = text.split(' ', 2);
                     switch (split[0]) {
                         case '!NICK':
@@ -99,6 +129,6 @@ new Cli({
         bridge.run(port, config);
 
         http.createServer(bot.middleware()).listen(3000);
-        console.log('Echo bot server running at port 3000.');
+        console.log('Facebook-side listening on port 3000.');
     }
 }).run();
