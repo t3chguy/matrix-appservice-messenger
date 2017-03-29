@@ -1,5 +1,25 @@
 type: object
-requires: ["messenger_webhook_url"]
+requires: ["homeserver", "messenger"]
 properties:
-  messenger_webhook_url:
-    type: string
+  homeserver:
+    type: object
+    properties:
+      url:
+        type: string
+      domain:
+        type: string
+      room_id:
+        type: string
+    additionalProperties: false
+    required: ["url", "domain", "room_id"]
+  messenger:
+    type: object
+    properties:
+      secret:
+        type: string
+      token:
+        type: string
+      verify:
+        type: string
+    additionalProperties: false
+    required: ["secret", "token", "verify"]

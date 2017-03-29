@@ -8,6 +8,11 @@ const Bot = require('messenger-bot');
 
 let bridge, bot;
 
+/**
+ * @TODO file uploads
+ * @TODO look into better output methods on the facebook platform
+ */
+
 new Cli({
     registrationPath: 'messenger-registration.yaml',
     generateRegistration: (reg, callback) => {
@@ -16,11 +21,12 @@ new Cli({
         reg.setAppServiceToken(AppServiceRegistration.generateToken());
         reg.setSenderLocalpart('messengerbot');
         reg.addRegexPattern('users', '@messenger_.*', true);
+        reg.addRegexPattern('aliases', '#messenger_.*', false);
         callback(reg);
     },
-    // bridgeConfig: {
-    //     schema: 'messenger-config-schema.yaml'
-    // },
+    bridgeConfig: {
+        schema: 'messenger-config-schema.yaml'
+    },
     run: (port, config) => {
 
         bot = new Bot({
@@ -50,18 +56,19 @@ new Cli({
                             text: "Nick changed to "+ split[1] }, err => {
                                 if (err) throw err;
 
+                                let intent = bridge.getIntent("@messenger_" + payload.sender.id + ':' + config.homeserver.domain);
+                                intent.setDisplayName(split[1]);
+
                                 console.log(`Nick Change for ${profile.first_name} ${profile.last_name}: ${text}`)
                             });
                     }
-                } else
-                    reply({ text }, err => {
-                        if (err) throw err;
+                } else {
+                    let intent = bridge.getIntent("@messenger_" + payload.sender.id + ':' + config.homeserver.domain);
+                    intent.sendText(config.homeserver.room_id, text);
 
-                        let intent = bridge.getIntent("@messenger_" + payload.sender.id +':'+ config.homeserver.domain);
-                        intent.sendText(config.homeserver.room_id, text);
+                    console.log(`Forwarded ${profile.first_name} ${profile.last_name}: ${text}`)
+                }
 
-                        console.log(`Echoed back to ${profile.first_name} ${profile.last_name}: ${text}`)
-                    });
             });
         });
 
@@ -81,7 +88,7 @@ new Cli({
                     if (event.type !== 'm.room.message' || !event.content || event.room_id !== config.homeserver.room_id) return;
 
                     bot.sendMessage(1285416551542338, {
-                        text: event.content.body
+                        text: event.sender.split(':', 2)[0] +': '+ event.content.body
                     }, (err, body) => {
                         if (err) throw err;
                     })
