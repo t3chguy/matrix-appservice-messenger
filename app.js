@@ -1,6 +1,7 @@
 // import { Cli, Bridge, AppServiceRegistration } from 'matrix-appservice-bridge';
 const Cli = require('matrix-appservice-bridge').Cli;
 const Bridge = require('matrix-appservice-bridge').Bridge;
+const ContentRepo = require("matrix-appservice-bridge").ContentRepo;
 const AppServiceRegistration = require('matrix-appservice-bridge').AppServiceRegistration;
 
 const http = require('http');
@@ -11,8 +12,8 @@ let bridge, bot;
 
 /**
  * @TODO make fb->mx gifs work (sticker GIFs break, real GIFs work...)
- * @TODO test fb->mx file transfers (PDFs etc)
- * @TODO mx->fb files/image transfers
+ * @TODO fb->mx file transfers
+ * @TODO mx->fb file transfers
  * @TODO look into better output methods on the facebook platform
  * @TODO opt in/out for fb side instead of hardcode to me
  */
@@ -74,8 +75,8 @@ new Cli({
                                         body: 'facebookImage.jpg'
                                     });
                                 }).catch(e => console.error(e));
-
                             });
+                        else console.dir(attachment);
                     });
 
                 } else if (text.startsWith('!')) {
@@ -83,13 +84,14 @@ new Cli({
                     switch (split[0]) {
                         case '!NICK':
                             reply({
-                            text: "Nick changed to "+ split[1] }, err => {
+                                text: "Nick changed to "+ split[1]
+                            }, err => {
                                 if (err) throw err;
 
                                 let intent = bridge.getIntent("@messenger_" + payload.sender.id + ':' + config.homeserver.domain);
                                 intent.setDisplayName(split[1]);
 
-                                console.log(`Nick Change for ${profile.first_name} ${profile.last_name}: ${text}`)
+                                console.log(`Nick Change for ${profile.first_name} ${profile.last_name}: ${text}`);
                             });
                     }
                 } else {
@@ -117,11 +119,34 @@ new Cli({
 
                     if (event.type !== 'm.room.message' || !event.content || event.room_id !== config.homeserver.room_id) return;
 
-                    bot.sendMessage(1285416551542338, {
-                        text: event.sender.split(':', 2)[0] +': '+ event.content.body
-                    }, (err, body) => {
-                        if (err) throw err;
-                    })
+                    let payload = {};
+
+                    switch (event.content.msgtype) {
+                        case 'm.text':
+                            payload = {
+                                text: event.sender.split(':', 2)[0] +': '+ event.content.body
+                            };
+                            break;
+
+                        case 'm.image':
+                            payload = {
+                                attachment: {
+                                    type: 'image',
+                                    payload: {
+                                        url: ContentRepo.getHttpUriForMxc(event.content.url)
+                                    }
+                                }
+                            };
+                            break;
+                    }
+
+                    console.dir(payload);
+                    if (payload)
+                        bot.sendMessage(1285416551542338, payload, (err, body) => {
+                            if (err) throw err;
+                        });
+                    else console.log('unhandled');
+
                 }
             }
         });
